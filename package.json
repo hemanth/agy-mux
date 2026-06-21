@@ -1,0 +1,15 @@
+{
+  "name": "agy-cloud",
+  "version": "1.0.0",
+  "type": "module",
+  "bin": {
+    "agy-cloud": "./cli/index.js"
+  },
+  "scripts": {
+    "start": "bun run server/index.js",
+    "dev": "bun --watch run server/index.js"
+  },
+  "description": "Cloud session layer for Antigravity CLI. Sessions survive laptop closures.",
+  "author": "Hemanth HM <hemanth.hm@gmail.com>",
+  "license": "MIT"
+}
