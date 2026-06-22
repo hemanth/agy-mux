@@ -31,30 +31,18 @@ export class SessionManager {
 
     let proc;
     try {
-      // agy needs a PTY to produce output. Use expect to allocate one.
-      // This works on both Linux and macOS with zero npm dependencies.
+      // agy needs a PTY to produce output. Use expect with interact.
+      // This works on macOS and Linux with expect installed.
       const expectScript = `
 log_user 0
 set timeout -1
 spawn agy
 log_user 1
-fconfigure stdin -blocking 0
-
-proc check_stdin {} {
-  if {[eof stdin]} return
-  set data [read stdin]
-  if {$data ne ""} {
-    send -- $data
-  }
-  after 10 check_stdin
+interact {
+  eof exit
 }
-
-check_stdin
-
-expect {
-  eof { exit 0 }
-  timeout { exp_continue }
-}
+catch wait result
+exit [lindex $result 3]
 `;
       proc = Bun.spawn(['expect', '-c', expectScript], {
         stdin: 'pipe',
