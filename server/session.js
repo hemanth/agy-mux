@@ -24,6 +24,11 @@ export class SessionManager {
     const id = crypto.randomUUID();
     const logFile = join(DATA_DIR, `${id}.log`);
 
+    // Ensure common bin dirs are in PATH (server may lack login shell PATH)
+    const home = process.env.HOME || '/root';
+    const extraPaths = [`${home}/.local/bin`, `${home}/.bun/bin`, '/usr/local/bin'];
+    const fullPath = [...extraPaths, process.env.PATH || ''].join(':');
+
     let proc;
     try {
       // agy needs a PTY to produce output. Use expect to allocate one.
@@ -45,6 +50,7 @@ exit [lindex $result 3]
         stderr: 'pipe',
         env: {
           ...process.env,
+          PATH: fullPath,
           TERM: clientType === 'terminal' ? (process.env.TERM || 'xterm-256color') : 'dumb',
         },
       });
