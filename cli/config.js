@@ -1,14 +1,14 @@
-// agyd — config manager
+// agy-mux — config manager
 
 import { join } from 'path';
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
 import { homedir } from 'os';
 
-const CONFIG_DIR = join(homedir(), '.agyd');
+const CONFIG_DIR = join(homedir(), '.agy-mux');
 const CONFIG_FILE = join(CONFIG_DIR, 'config.json');
 
 /**
- * Load config from ~/.agyd/config.json
+ * Load config from ~/.agy-mux/config.json
  * @returns {{ server: string, token: string } | null}
  */
 export function loadConfig() {
@@ -21,7 +21,7 @@ export function loadConfig() {
 }
 
 /**
- * Save config to ~/.agyd/config.json
+ * Save config to ~/.agy-mux/config.json
  * @param {{ server: string, token: string }} config
  */
 export function saveConfig(config) {

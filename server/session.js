@@ -1,4 +1,4 @@
-// agyd — session manager
+// agy-mux — session manager
 
 import { join } from 'path';
 import { mkdirSync, appendFileSync } from 'fs';

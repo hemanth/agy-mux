@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-// agyd — CLI entry point
+// agy-mux — CLI entry point
 
 import { loadConfig, saveConfig, hasConfig, configPath } from './config.js';
 import { connectTerminal } from './client.js';
@@ -38,15 +38,15 @@ async function main() {
 
 function printUsage() {
   console.log(`
-  agyd — cloud session layer for Antigravity CLI
+  agy-mux — cloud session layer for Antigravity CLI
 
   Usage:
-    agyd start [name]     Create a new session and connect
-    agyd resume <id>      Reconnect to a running session
-    agyd list             Show active sessions
-    agyd stop <id>        Kill a session
-    agyd logs <id>        Show session output log
-    agyd config           Set server URL and token
+    agy-mux start [name]     Create a new session and connect
+    agy-mux resume <id>      Reconnect to a running session
+    agy-mux list             Show active sessions
+    agy-mux stop <id>        Kill a session
+    agy-mux logs <id>        Show session output log
+    agy-mux config           Set server URL and token
 
   Config: ${configPath()}
 `);
@@ -55,7 +55,7 @@ function printUsage() {
 function requireConfig() {
   const config = loadConfig();
   if (!config) {
-    console.error('  No config found. Run: agyd config');
+    console.error('  No config found. Run: agy-mux config');
     process.exit(1);
   }
   return config;
@@ -68,8 +68,8 @@ async function cmdStart(name) {
 
 async function cmdResume(id) {
   if (!id) {
-    console.error('  Usage: agyd resume <session-id>');
-    console.error('  Run "agyd list" to see active sessions.');
+    console.error('  Usage: agy-mux resume <session-id>');
+    console.error('  Run "agy-mux list" to see active sessions.');
     process.exit(1);
   }
   const config = requireConfig();
@@ -111,7 +111,7 @@ function pad(str, len) {
 
 async function cmdStop(id) {
   if (!id) {
-    console.error('  Usage: agyd stop <session-id>');
+    console.error('  Usage: agy-mux stop <session-id>');
     process.exit(1);
   }
   const config = requireConfig();
@@ -148,7 +148,7 @@ async function cmdStop(id) {
 
 async function cmdLogs(id) {
   if (!id) {
-    console.error('  Usage: agyd logs <session-id>');
+    console.error('  Usage: agy-mux logs <session-id>');
     process.exit(1);
   }
   const config = requireConfig();
@@ -203,7 +203,7 @@ async function cmdConfig() {
 
   const existing = loadConfig();
 
-  console.log('\n  agyd configuration\n');
+  console.log('\n  agy-mux configuration\n');
 
   const server = (await ask(`  Server URL [${existing?.server || 'http://localhost:3000'}]: `)).trim()
     || existing?.server || 'http://localhost:3000';

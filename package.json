@@ -1,10 +1,10 @@
 {
-  "name": "agyd",
+  "name": "agy-mux",
   "version": "1.0.0",
   "type": "module",
   "description": "Cloud session layer for Antigravity CLI. Sessions survive laptop closures, continue from any device.",
   "bin": {
-    "agyd": "./cli/index.js"
+    "agy-mux": "cli/index.js"
   },
   "files": [
     "cli/",
@@ -29,11 +29,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/hemanth/agyd.git"
+    "url": "git+https://github.com/hemanth/agy-mux.git"
   },
-  "homepage": "https://github.com/hemanth/agyd#readme",
+  "homepage": "https://github.com/hemanth/agy-mux#readme",
   "bugs": {
-    "url": "https://github.com/hemanth/agyd/issues"
+    "url": "https://github.com/hemanth/agy-mux/issues"
   },
   "engines": {
     "node": ">=22.0.0"

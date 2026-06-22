@@ -1,4 +1,4 @@
-// agyd — auth
+// agy-mux — auth
 
 const AUTH_TOKEN = process.env.AUTH_TOKEN;
 

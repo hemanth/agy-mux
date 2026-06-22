@@ -1,4 +1,4 @@
-// agyd — server
+// agy-mux — server
 
 import { verifyToken, isDevMode } from './auth.js';
 import { SessionManager } from './session.js';
@@ -91,4 +91,4 @@ function handleMessage(ws, msg) {
   }
 }
 
-console.log(`\n  agyd running on port ${PORT}${isDevMode() ? ' (dev mode)' : ' 🔒'}\n`);
+console.log(`\n  agy-mux running on port ${PORT}${isDevMode() ? ' (dev mode)' : ' 🔒'}\n`);
