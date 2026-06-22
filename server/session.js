@@ -26,7 +26,12 @@ export class SessionManager {
 
     let proc;
     try {
-      proc = Bun.spawn(['agy'], {
+      // Use `script` to provide a PTY — agy buffers output without one
+      const isLinux = process.platform === 'linux';
+      const cmd = isLinux
+        ? ['script', '-qfc', 'agy', '/dev/null']
+        : ['script', '-q', '/dev/null', 'agy'];
+      proc = Bun.spawn(cmd, {
         stdin: 'pipe',
         stdout: 'pipe',
         stderr: 'pipe',
