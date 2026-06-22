@@ -90,10 +90,6 @@ async function cmdList() {
       return;
     }
     console.log('');
-    console.log('  %-36s  %-20s  %-8s  %-8s  %s'.replace(/%(-?\d*)s/g, (_, w) => {
-      return `%${w}s`;
-    }));
-    // Print header
     const header = ['ID', 'NAME', 'STATUS', 'CLIENTS', 'STARTED'];
     console.log(`  ${pad(header[0], 36)}  ${pad(header[1], 20)}  ${pad(header[2], 8)}  ${pad(header[3], 8)}  ${header[4]}`);
     console.log(`  ${'-'.repeat(36)}  ${'-'.repeat(20)}  ${'-'.repeat(8)}  ${'-'.repeat(8)}  ${'-'.repeat(20)}`);

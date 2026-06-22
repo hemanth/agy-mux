@@ -2,14 +2,43 @@
   "name": "agy-cloud",
   "version": "1.0.0",
   "type": "module",
+  "description": "Cloud session layer for Antigravity CLI. Sessions survive laptop closures, continue from any device.",
   "bin": {
     "agy-cloud": "./cli/index.js"
   },
+  "files": [
+    "cli/",
+    "server/",
+    "web/",
+    "deploy.sh",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "start": "bun run server/index.js",
     "dev": "bun --watch run server/index.js"
   },
-  "description": "Cloud session layer for Antigravity CLI. Sessions survive laptop closures.",
+  "keywords": [
+    "antigravity",
+    "ai",
+    "agents",
+    "cloud",
+    "session",
+    "remote",
+    "cli",
+    "agy"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hemanth/agy-cloud.git"
+  },
+  "homepage": "https://github.com/hemanth/agy-cloud#readme",
+  "bugs": {
+    "url": "https://github.com/hemanth/agy-cloud/issues"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "author": "Hemanth HM <hemanth.hm@gmail.com>",
   "license": "MIT"
 }
