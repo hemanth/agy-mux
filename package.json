@@ -9,7 +9,6 @@
   "files": [
     "cli/",
     "server/",
-    "web/",
     "deploy.sh",
     "README.md",
     "LICENSE"

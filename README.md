@@ -49,10 +49,6 @@ agy-cloud config           # Set server URL and token
 - `Ctrl+\` detaches — session keeps running
 - `Ctrl+C` forwards to agy — normal interrupt behavior
 
-## Web UI
-
-Hit `http://your-server:3000` in a browser. Enter your token. Create and resume sessions from any device, including mobile.
-
 ## How it works
 
 ```
