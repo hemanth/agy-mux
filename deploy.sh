@@ -4,9 +4,9 @@ set -e
 PROJECT=${1:-hemanth-hm}
 ZONE=${2:-us-central1-a}
 MACHINE=${3:-e2-medium}
-NAME="agy-cloud"
+NAME="agyd"
 
-echo "Deploying agy-cloud to $PROJECT..."
+echo "Deploying agyd to $PROJECT..."
 
 # Create VM
 gcloud compute instances create $NAME \
@@ -16,7 +16,7 @@ gcloud compute instances create $NAME \
   --boot-disk-size=30GB --tags=http-server
 
 # Firewall
-gcloud compute firewall-rules create allow-agy-cloud \
+gcloud compute firewall-rules create allow-agyd \
   --project=$PROJECT --direction=INGRESS --action=ALLOW \
   --rules=tcp:3000 --target-tags=http-server \
   --source-ranges=0.0.0.0/0 2>/dev/null || true
@@ -30,20 +30,20 @@ gcloud compute ssh $NAME --project=$PROJECT --zone=$ZONE --command="
   curl -fsSL https://bun.sh/install | bash
   curl -fsSL https://antigravity.google/cli/install.sh | bash
   export PATH=\$HOME/.bun/bin:\$HOME/.local/bin:\$PATH
-  cd /opt && sudo git clone https://github.com/hemanth/agy-cloud.git
-  sudo chown -R \$(whoami) /opt/agy-cloud && cd /opt/agy-cloud
+  cd /opt && sudo git clone https://github.com/hemanth/agyd.git
+  sudo chown -R \$(whoami) /opt/agyd && cd /opt/agyd
   TOKEN=\$(openssl rand -hex 32)
   echo AUTH_TOKEN=\$TOKEN > .env && echo PORT=3000 >> .env
-  nohup bun run server/index.js > /tmp/agy-cloud.log 2>&1 &
+  nohup bun run server/index.js > /tmp/agyd.log 2>&1 &
   echo ''
   echo '========================================'
-  echo 'agy-cloud deployed!'
+  echo 'agyd deployed!'
   echo \"Server: http://$IP:3000\"
   echo \"Token:  \$TOKEN\"
   echo '========================================'
 "
 
 echo ""
-echo "Configure CLI: agy-cloud config"
+echo "Configure CLI: agyd config"
 echo "  Server: http://$IP:3000"
 echo "  Token: (see above)"

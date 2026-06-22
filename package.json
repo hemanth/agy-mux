@@ -1,10 +1,10 @@
 {
-  "name": "agy-cloud",
+  "name": "agyd",
   "version": "1.0.0",
   "type": "module",
   "description": "Cloud session layer for Antigravity CLI. Sessions survive laptop closures, continue from any device.",
   "bin": {
-    "agy-cloud": "./cli/index.js"
+    "agyd": "./cli/index.js"
   },
   "files": [
     "cli/",
@@ -29,11 +29,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/hemanth/agy-cloud.git"
+    "url": "https://github.com/hemanth/agyd.git"
   },
-  "homepage": "https://github.com/hemanth/agy-cloud#readme",
+  "homepage": "https://github.com/hemanth/agyd#readme",
   "bugs": {
-    "url": "https://github.com/hemanth/agy-cloud/issues"
+    "url": "https://github.com/hemanth/agyd/issues"
   },
   "engines": {
     "node": ">=22.0.0"

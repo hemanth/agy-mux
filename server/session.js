@@ -1,4 +1,4 @@
-// agy-cloud — session manager
+// agyd — session manager
 
 import { join } from 'path';
 import { mkdirSync, appendFileSync } from 'fs';

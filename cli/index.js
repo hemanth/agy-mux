@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-// agy-cloud — CLI entry point
+// agyd — CLI entry point
 
 import { loadConfig, saveConfig, hasConfig, configPath } from './config.js';
 import { connectTerminal } from './client.js';
@@ -38,15 +38,15 @@ async function main() {
 
 function printUsage() {
   console.log(`
-  agy-cloud — cloud session layer for Antigravity CLI
+  agyd — cloud session layer for Antigravity CLI
 
   Usage:
-    agy-cloud start [name]     Create a new session and connect
-    agy-cloud resume <id>      Reconnect to a running session
-    agy-cloud list             Show active sessions
-    agy-cloud stop <id>        Kill a session
-    agy-cloud logs <id>        Show session output log
-    agy-cloud config           Set server URL and token
+    agyd start [name]     Create a new session and connect
+    agyd resume <id>      Reconnect to a running session
+    agyd list             Show active sessions
+    agyd stop <id>        Kill a session
+    agyd logs <id>        Show session output log
+    agyd config           Set server URL and token
 
   Config: ${configPath()}
 `);
@@ -55,7 +55,7 @@ function printUsage() {
 function requireConfig() {
   const config = loadConfig();
   if (!config) {
-    console.error('  No config found. Run: agy-cloud config');
+    console.error('  No config found. Run: agyd config');
     process.exit(1);
   }
   return config;
@@ -68,8 +68,8 @@ async function cmdStart(name) {
 
 async function cmdResume(id) {
   if (!id) {
-    console.error('  Usage: agy-cloud resume <session-id>');
-    console.error('  Run "agy-cloud list" to see active sessions.');
+    console.error('  Usage: agyd resume <session-id>');
+    console.error('  Run "agyd list" to see active sessions.');
     process.exit(1);
   }
   const config = requireConfig();
@@ -111,7 +111,7 @@ function pad(str, len) {
 
 async function cmdStop(id) {
   if (!id) {
-    console.error('  Usage: agy-cloud stop <session-id>');
+    console.error('  Usage: agyd stop <session-id>');
     process.exit(1);
   }
   const config = requireConfig();
@@ -148,7 +148,7 @@ async function cmdStop(id) {
 
 async function cmdLogs(id) {
   if (!id) {
-    console.error('  Usage: agy-cloud logs <session-id>');
+    console.error('  Usage: agyd logs <session-id>');
     process.exit(1);
   }
   const config = requireConfig();
@@ -203,7 +203,7 @@ async function cmdConfig() {
 
   const existing = loadConfig();
 
-  console.log('\n  agy-cloud configuration\n');
+  console.log('\n  agyd configuration\n');
 
   const server = (await ask(`  Server URL [${existing?.server || 'http://localhost:3000'}]: `)).trim()
     || existing?.server || 'http://localhost:3000';

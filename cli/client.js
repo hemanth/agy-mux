@@ -1,7 +1,7 @@
-// agy-cloud — terminal WebSocket client
+// agyd — terminal WebSocket client
 
 /**
- * Connect to agy-cloud server and pipe terminal I/O
+ * Connect to agyd server and pipe terminal I/O
  * @param {string} serverUrl - Base server URL (e.g. http://localhost:3000)
  * @param {string} token - Auth token
  * @param {'start'|'resume'} action
@@ -26,7 +26,7 @@ export async function connectTerminal(serverUrl, token, action, sessionId, sessi
   function detach() {
     cleanup();
     console.log(`\n\n  Detached from session ${currentId}`);
-    console.log(`  Resume with: agy-cloud resume ${currentId}\n`);
+    console.log(`  Resume with: agyd resume ${currentId}\n`);
     ws.close();
     process.exit(0);
   }
@@ -58,7 +58,7 @@ export async function connectTerminal(serverUrl, token, action, sessionId, sessi
         case 'started':
           currentId = msg.id;
           process.stderr.write(`\x1b[2m  Session: ${msg.name} (${msg.id})\x1b[0m\n`);
-          process.stderr.write(`\x1b[2m  Detach: Ctrl+\\  |  Kill: agy-cloud stop ${msg.id}\x1b[0m\n\n`);
+          process.stderr.write(`\x1b[2m  Detach: Ctrl+\\  |  Kill: agyd stop ${msg.id}\x1b[0m\n\n`);
           break;
 
         case 'output':
@@ -91,7 +91,7 @@ export async function connectTerminal(serverUrl, token, action, sessionId, sessi
           } else if (msg.name) {
             currentId = msg.id;
             process.stderr.write(`\x1b[2m  Resumed: ${msg.name} (${msg.id})\x1b[0m\n`);
-            process.stderr.write(`\x1b[2m  Detach: Ctrl+\\  |  Kill: agy-cloud stop ${msg.id}\x1b[0m\n\n`);
+            process.stderr.write(`\x1b[2m  Detach: Ctrl+\\  |  Kill: agyd stop ${msg.id}\x1b[0m\n\n`);
           }
           break;
 
@@ -129,7 +129,7 @@ export async function connectTerminal(serverUrl, token, action, sessionId, sessi
       cleanup();
       process.stderr.write(`\n\x1b[2m  Disconnected from server.`);
       if (currentId) {
-        process.stderr.write(` Resume with: agy-cloud resume ${currentId}`);
+        process.stderr.write(` Resume with: agyd resume ${currentId}`);
       }
       process.stderr.write(`\x1b[0m\n`);
       process.exit(1);

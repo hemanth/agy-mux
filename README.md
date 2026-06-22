@@ -1,9 +1,9 @@
-# agy-cloud
+# agyd
 
 Cloud session layer for Antigravity CLI. Sessions survive laptop closures, continue from any device.
 
 ```bash
-npm install -g agy-cloud
+npm install -g agyd
 ```
 
 ## Quick start
@@ -13,15 +13,15 @@ npm install -g agy-cloud
 AUTH_TOKEN=secret bun run server/index.js
 
 # On any device
-agy-cloud config
+agyd config
 # → Server: http://your-server:3000
 # → Token: secret
 
-agy-cloud start my-feature
+agyd start my-feature
 # agy starts in the cloud, terminal pipes through
 
 # Close laptop. Open phone. Or another machine.
-agy-cloud resume <session-id>
+agyd resume <session-id>
 # Pick up exactly where you left off
 ```
 
@@ -38,12 +38,12 @@ Creates a GCE VM, installs Bun + agy, generates a token, starts the server.
 ## CLI
 
 ```bash
-agy-cloud start [name]     # Create a new session and connect
-agy-cloud resume <id>      # Reconnect to a running session
-agy-cloud list             # Show active sessions
-agy-cloud stop <id>        # Kill a session
-agy-cloud logs <id>        # Show session output log
-agy-cloud config           # Set server URL and token
+agyd start [name]     # Create a new session and connect
+agyd resume <id>      # Reconnect to a running session
+agyd list             # Show active sessions
+agyd stop <id>        # Kill a session
+agyd logs <id>        # Show session output log
+agyd config           # Set server URL and token
 ```
 
 - `Ctrl+\` detaches — session keeps running
@@ -52,7 +52,7 @@ agy-cloud config           # Set server URL and token
 ## How it works
 
 ```
-  laptop/phone ──WebSocket──→ agy-cloud server ──stdin/stdout──→ agy subprocess
+  laptop/phone ──WebSocket──→ agyd server ──stdin/stdout──→ agy subprocess
        ↑                            │
        └────── resume from ─────────┘
                any device
