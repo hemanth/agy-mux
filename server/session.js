@@ -1,9 +1,12 @@
-// agy-mux — session manager
+// agy-mux — session manager (node-pty)
 
-import { join } from 'path';
-import { mkdirSync, appendFileSync } from 'fs';
+import { join, dirname } from 'path';
+import { mkdirSync, appendFileSync, statSync } from 'fs';
+import { fileURLToPath } from 'url';
+import pty from 'node-pty';
 
-const DATA_DIR = join(import.meta.dir, '..', 'data', 'sessions');
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const DATA_DIR = join(__dirname, '..', 'data', 'sessions');
 
 // Ensure data dir exists on startup
 try { mkdirSync(DATA_DIR, { recursive: true }); } catch {}
@@ -17,37 +20,34 @@ export class SessionManager {
   /**
    * Create a new agy session
    * @param {string} name
-   * @param {string} clientType - 'terminal' or 'web'
+   * @param {string} clientType - 'terminal'
    * @returns {Session}
    */
   create(name, clientType) {
     const id = crypto.randomUUID();
     const logFile = join(DATA_DIR, `${id}.log`);
 
-    // Ensure common bin dirs are in PATH (server may lack login shell PATH)
+    // Ensure common bin dirs are in PATH
     const home = process.env.HOME || '/root';
     const extraPaths = [`${home}/.local/bin`, `${home}/.bun/bin`, '/usr/local/bin'];
     const fullPath = [...extraPaths, process.env.PATH || ''].join(':');
 
+    // Resolve agy binary path (node-pty needs it)
+    let agyBin = 'agy';
+    for (const dir of fullPath.split(':')) {
+      try {
+        const candidate = join(dir, 'agy');
+        if (statSync(candidate).isFile()) { agyBin = candidate; break; }
+      } catch {}
+    }
+
     let proc;
     try {
-      // agy needs a PTY to produce output. Use expect with interact.
-      // This works on macOS and Linux with expect installed.
-      const expectScript = `
-log_user 0
-set timeout -1
-spawn agy
-log_user 1
-interact {
-  eof exit
-}
-catch wait result
-exit [lindex $result 3]
-`;
-      proc = Bun.spawn(['expect', '-c', expectScript], {
-        stdin: 'pipe',
-        stdout: 'pipe',
-        stderr: 'pipe',
+      proc = pty.spawn(agyBin, [], {
+        name: clientType === 'terminal' ? (process.env.TERM || 'xterm-256color') : 'dumb',
+        cols: 200,
+        rows: 50,
+        cwd: process.env.HOME || '/tmp',
         env: {
           ...process.env,
           PATH: fullPath,
@@ -73,7 +73,6 @@ exit [lindex $result 3]
         ts: Date.now(),
       });
       this.sessions.set(id, session);
-      // Broadcast error to any connected clients
       setTimeout(() => {
         this.broadcast(id, {
           type: 'output',
@@ -99,43 +98,26 @@ exit [lindex $result 3]
 
     this.sessions.set(id, session);
 
-    // Stream stdout
-    this._streamReader(session, proc.stdout, 'output');
-    // Stream stderr
-    this._streamReader(session, proc.stderr, 'error');
-
-    // Handle process exit
-    proc.exited.then((code) => {
-      session.status = 'exited';
+    // node-pty emits 'data' events with output
+    proc.onData((data) => {
       session.lastActivity = Date.now();
-      const entry = { type: 'system', data: `Process exited with code ${code}`, ts: Date.now() };
+      const entry = { type: 'output', data, ts: Date.now() };
       session.history.push(entry);
       this._appendLog(session, entry);
-      this.broadcast(id, { type: 'status', id, status: 'exited', code });
-    }).catch(() => {
+      this.broadcast(session.id, { type: 'output', source: 'output', data });
+    });
+
+    // Handle process exit
+    proc.onExit(({ exitCode }) => {
       session.status = 'exited';
+      session.lastActivity = Date.now();
+      const entry = { type: 'system', data: `Process exited with code ${exitCode}`, ts: Date.now() };
+      session.history.push(entry);
+      this._appendLog(session, entry);
+      this.broadcast(id, { type: 'status', id, status: 'exited', code: exitCode });
     });
 
     return session;
-  }
-
-  async _streamReader(session, stream, type) {
-    try {
-      const reader = stream.getReader();
-      const decoder = new TextDecoder();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const text = decoder.decode(value, { stream: true });
-        session.lastActivity = Date.now();
-        const entry = { type, data: text, ts: Date.now() };
-        session.history.push(entry);
-        this._appendLog(session, entry);
-        this.broadcast(session.id, { type: 'output', source: type, data: text });
-      }
-    } catch {
-      // Stream closed
-    }
   }
 
   _appendLog(session, entry) {
@@ -147,19 +129,10 @@ exit [lindex $result 3]
     }
   }
 
-  /**
-   * Get session by ID
-   * @param {string} id
-   * @returns {Session|undefined}
-   */
   get(id) {
     return this.sessions.get(id);
   }
 
-  /**
-   * List all sessions
-   * @returns {Array<{id, name, status, startedAt, lastActivity, clientCount}>}
-   */
   list() {
     return [...this.sessions.values()].map((s) => ({
       id: s.id,
@@ -171,10 +144,6 @@ exit [lindex $result 3]
     }));
   }
 
-  /**
-   * Kill a session's subprocess
-   * @param {string} id
-   */
   kill(id) {
     const session = this.sessions.get(id);
     if (!session) return;
@@ -189,11 +158,6 @@ exit [lindex $result 3]
     this.broadcast(id, { type: 'status', id, status: 'stopped' });
   }
 
-  /**
-   * Write data to a session's stdin
-   * @param {string} id
-   * @param {string} data
-   */
   sendInput(id, data) {
     const session = this.sessions.get(id);
     if (!session || !session.process || session.status !== 'running') return;
@@ -202,39 +166,25 @@ exit [lindex $result 3]
     session.lastActivity = Date.now();
     this._appendLog(session, entry);
     try {
-      session.process.stdin.write(data);
+      session.process.write(data);
     } catch {
       // stdin closed
     }
   }
 
-  /**
-   * Add a WebSocket client to a session
-   * @param {string} id
-   * @param {WebSocket} ws
-   */
   addClient(id, ws) {
     const session = this.sessions.get(id);
     if (!session) return;
     session.clients.add(ws);
-    ws.data._sessionId = id;
+    ws._sessionId = id;
   }
 
-  /**
-   * Remove a WebSocket client from all sessions
-   * @param {WebSocket} ws
-   */
   removeClient(ws) {
     for (const session of this.sessions.values()) {
       session.clients.delete(ws);
     }
   }
 
-  /**
-   * Broadcast a message to all clients of a session
-   * @param {string} id
-   * @param {object} msg
-   */
   broadcast(id, msg) {
     const session = this.sessions.get(id);
     if (!session) return;

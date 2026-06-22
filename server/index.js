@@ -1,65 +1,71 @@
-// agy-mux — server
+// agy-mux — server (Node.js)
 
+import { createServer } from 'http';
+import { parse } from 'url';
+import { WebSocketServer } from 'ws';
 import { verifyToken, isDevMode } from './auth.js';
 import { SessionManager } from './session.js';
 
 const PORT = parseInt(process.env.PORT || '3000', 10);
 const mgr = new SessionManager();
 
-const server = Bun.serve({
-  port: PORT,
-  async fetch(req, server) {
-    const url = new URL(req.url, `http://localhost:${PORT}`);
+const server = createServer((req, res) => {
+  const url = parse(req.url, true);
 
-    // API: list sessions
-    if (url.pathname === '/api/sessions') {
-      const token = url.searchParams.get('token');
-      if (!verifyToken(token)) return new Response('Unauthorized', { status: 401 });
-      return Response.json(mgr.list());
+  // API: list sessions
+  if (url.pathname === '/api/sessions') {
+    const token = url.query.token;
+    if (!verifyToken(token)) { res.writeHead(401); res.end('Unauthorized'); return; }
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(mgr.list()));
+    return;
+  }
+
+  // API: health
+  if (url.pathname === '/health') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ status: 'ok', sessions: mgr.list().length, devMode: isDevMode() }));
+    return;
+  }
+
+  res.writeHead(404);
+  res.end('Not Found');
+});
+
+const wss = new WebSocketServer({ server });
+
+wss.on('connection', (ws, req) => {
+  const url = parse(req.url, true);
+  const token = url.query.token;
+  const clientType = url.query.client || 'terminal';
+
+  if (!verifyToken(token)) {
+    ws.close(1008, 'Unauthorized');
+    return;
+  }
+
+  ws._clientType = clientType;
+  ws.send(JSON.stringify({ type: 'connected' }));
+
+  ws.on('message', (raw) => {
+    try {
+      const msg = JSON.parse(raw);
+      handleMessage(ws, msg);
+    } catch (e) {
+      ws.send(JSON.stringify({ type: 'error', message: e.message }));
     }
+  });
 
-    // API: health
-    if (url.pathname === '/health') {
-      return Response.json({ status: 'ok', sessions: mgr.list().length, devMode: isDevMode() });
-    }
-
-    // WebSocket upgrade
-    if (url.pathname === '/ws') {
-      const token = url.searchParams.get('token');
-      if (!verifyToken(token)) return new Response('Unauthorized', { status: 401 });
-      const clientType = url.searchParams.get('client') || 'terminal';
-      const upgraded = server.upgrade(req, { data: { token, clientType } });
-      if (!upgraded) return new Response('WebSocket upgrade failed', { status: 500 });
-      return undefined;
-    }
-
-    return new Response('Not Found', { status: 404 });
-  },
-
-  websocket: {
-    open(ws) {
-      ws.data.mgr = mgr;
-      ws.send(JSON.stringify({ type: 'connected' }));
-    },
-    message(ws, raw) {
-      try {
-        const msg = JSON.parse(raw);
-        handleMessage(ws, msg);
-      } catch (e) {
-        ws.send(JSON.stringify({ type: 'error', message: e.message }));
-      }
-    },
-    close(ws) {
-      mgr.removeClient(ws);
-    },
-  },
+  ws.on('close', () => {
+    mgr.removeClient(ws);
+  });
 });
 
 function handleMessage(ws, msg) {
   switch (msg.type) {
     case 'start': {
       const name = msg.name || `session-${Date.now()}`;
-      const session = mgr.create(name, ws.data.clientType);
+      const session = mgr.create(name, ws._clientType);
       mgr.addClient(session.id, ws);
       ws.send(JSON.stringify({ type: 'started', id: session.id, name: session.name }));
       break;
@@ -91,4 +97,6 @@ function handleMessage(ws, msg) {
   }
 }
 
-console.log(`\n  agy-mux running on port ${PORT}${isDevMode() ? ' (dev mode)' : ' 🔒'}\n`);
+server.listen(PORT, () => {
+  console.log(`\n  agy-mux running on port ${PORT}${isDevMode() ? ' (dev mode)' : ' 🔒'}\n`);
+});

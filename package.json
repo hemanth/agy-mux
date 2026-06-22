@@ -1,6 +1,6 @@
 {
   "name": "agy-mux",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "type": "module",
   "description": "Cloud session layer for Antigravity CLI. Sessions survive laptop closures, continue from any device.",
   "bin": {
@@ -9,13 +9,15 @@
   "files": [
     "cli/",
     "server/",
-    "deploy.sh",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
-    "start": "bun run server/index.js",
-    "dev": "bun --watch run server/index.js"
+    "start": "node server/index.js"
+  },
+  "dependencies": {
+    "node-pty": "^1.0.0",
+    "ws": "^8.18.0"
   },
   "keywords": [
     "antigravity",
@@ -25,7 +27,9 @@
     "session",
     "remote",
     "cli",
-    "agy"
+    "agy",
+    "pty",
+    "tmux"
   ],
   "repository": {
     "type": "git",
