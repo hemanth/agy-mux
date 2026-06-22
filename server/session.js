@@ -26,12 +26,20 @@ export class SessionManager {
 
     let proc;
     try {
-      // Use `script` to provide a PTY — agy buffers output without one
-      const isLinux = process.platform === 'linux';
-      const cmd = isLinux
-        ? ['script', '-qfc', 'agy', '/dev/null']
-        : ['script', '-q', '/dev/null', 'agy'];
-      proc = Bun.spawn(cmd, {
+      // agy needs a PTY to produce output. Use expect to allocate one.
+      // This works on both Linux and macOS with zero npm dependencies.
+      const expectScript = `
+log_user 0
+set timeout -1
+spawn agy
+log_user 1
+interact {
+  eof exit
+}
+catch wait result
+exit [lindex $result 3]
+`;
+      proc = Bun.spawn(['expect', '-c', expectScript], {
         stdin: 'pipe',
         stdout: 'pipe',
         stderr: 'pipe',
