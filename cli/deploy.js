@@ -7,7 +7,7 @@ const DEFAULTS = {
   project: 'hemanth-hm',
   zone: 'us-central1-a',
   machine: 'e2-medium',
-  name: 'agy-mux',
+  name: 'agy-remote',
 };
 
 function run(cmd, opts = {}) {
