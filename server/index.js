@@ -71,11 +71,24 @@ function handleMessage(ws, msg) {
       break;
     }
     case 'resume': {
-      const session = mgr.get(msg.id);
+      let session = mgr.get(msg.id);
       if (!session) {
         ws.send(JSON.stringify({ type: 'error', message: `Session ${msg.id} not found` }));
         return;
       }
+
+      // If session exited, restart agy with --conversation to continue
+      if (session.status === 'exited' || session.status === 'stopped') {
+        const restarted = mgr.restart(msg.id, ws._clientType);
+        if (restarted) {
+          session = restarted;
+          ws.send(JSON.stringify({ type: 'restarted', id: session.id, name: session.name, previousId: msg.id }));
+        } else {
+          ws.send(JSON.stringify({ type: 'error', message: 'Failed to restart session' }));
+          return;
+        }
+      }
+
       mgr.addClient(session.id, ws);
       ws.send(JSON.stringify({ type: 'history', id: session.id, entries: session.history }));
       ws.send(JSON.stringify({ type: 'status', id: session.id, status: session.status, name: session.name }));

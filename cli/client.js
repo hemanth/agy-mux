@@ -61,6 +61,13 @@ export async function connectTerminal(serverUrl, token, action, sessionId, sessi
           process.stderr.write(`\x1b[2m  Detach: Ctrl+\\  |  Kill: agy-mux stop ${msg.id}\x1b[0m\n\n`);
           break;
 
+        case 'restarted':
+          currentId = msg.id;
+          process.stderr.write(`\x1b[2m  Restarted: ${msg.name} (${msg.id})\x1b[0m\n`);
+          process.stderr.write(`\x1b[2m  Continuing conversation from ${msg.previousId}\x1b[0m\n`);
+          process.stderr.write(`\x1b[2m  Detach: Ctrl+\\  |  Kill: agy-mux stop ${msg.id}\x1b[0m\n\n`);
+          break;
+
         case 'output':
           process.stdout.write(msg.data);
           break;

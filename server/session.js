@@ -105,6 +105,10 @@ export class SessionManager {
       session.history.push(entry);
       this._appendLog(session, entry);
       this.broadcast(session.id, { type: 'output', source: 'output', data });
+
+      // Capture agy conversation ID for resume
+      const match = data.match(/--conversation=([0-9a-f-]{36})/i);
+      if (match) session.conversationId = match[1];
     });
 
     // Handle process exit
@@ -142,6 +146,90 @@ export class SessionManager {
       lastActivity: s.lastActivity,
       clientCount: s.clients.size,
     }));
+  }
+
+  /**
+   * Restart an exited session, optionally continuing the agy conversation
+   */
+  restart(id, clientType) {
+    const old = this.sessions.get(id);
+    if (!old) return null;
+
+    // Build agy args
+    const args = [];
+    if (old.conversationId) {
+      args.push(`--conversation=${old.conversationId}`, '-c');
+    }
+
+    // Create new session reusing the name
+    const newId = crypto.randomUUID();
+    const logFile = join(DATA_DIR, `${newId}.log`);
+
+    const home = process.env.HOME || '/root';
+    const extraPaths = [`${home}/.local/bin`, `${home}/.bun/bin`, '/usr/local/bin'];
+    const fullPath = [...extraPaths, process.env.PATH || ''].join(':');
+
+    let agyBin = 'agy';
+    for (const dir of fullPath.split(':')) {
+      try {
+        const candidate = join(dir, 'agy');
+        if (statSync(candidate).isFile()) { agyBin = candidate; break; }
+      } catch {}
+    }
+
+    let proc;
+    try {
+      proc = pty.spawn(agyBin, args, {
+        name: clientType === 'terminal' ? (process.env.TERM || 'xterm-256color') : 'dumb',
+        cols: 200,
+        rows: 50,
+        cwd: process.env.HOME || '/tmp',
+        env: {
+          ...process.env,
+          PATH: fullPath,
+          TERM: clientType === 'terminal' ? (process.env.TERM || 'xterm-256color') : 'dumb',
+        },
+      });
+    } catch (err) {
+      return null;
+    }
+
+    const session = {
+      id: newId,
+      name: old.name,
+      process: proc,
+      history: [],
+      clients: new Set(),
+      status: 'running',
+      startedAt: Date.now(),
+      lastActivity: Date.now(),
+      logFile,
+      conversationId: old.conversationId,
+      previousSessionId: id,
+    };
+
+    this.sessions.set(newId, session);
+
+    proc.onData((data) => {
+      session.lastActivity = Date.now();
+      const entry = { type: 'output', data, ts: Date.now() };
+      session.history.push(entry);
+      this._appendLog(session, entry);
+      this.broadcast(session.id, { type: 'output', source: 'output', data });
+      const match = data.match(/--conversation=([0-9a-f-]{36})/i);
+      if (match) session.conversationId = match[1];
+    });
+
+    proc.onExit(({ exitCode }) => {
+      session.status = 'exited';
+      session.lastActivity = Date.now();
+      const entry = { type: 'system', data: `Process exited with code ${exitCode}`, ts: Date.now() };
+      session.history.push(entry);
+      this._appendLog(session, entry);
+      this.broadcast(newId, { type: 'status', id: newId, status: 'exited', code: exitCode });
+    });
+
+    return session;
   }
 
   kill(id) {

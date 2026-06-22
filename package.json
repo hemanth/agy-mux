@@ -1,6 +1,6 @@
 {
   "name": "agy-mux",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "type": "module",
   "description": "Cloud session layer for Antigravity CLI. Sessions survive laptop closures, continue from any device.",
   "bin": {
