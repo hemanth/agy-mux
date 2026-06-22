@@ -38,11 +38,23 @@ log_user 0
 set timeout -1
 spawn agy
 log_user 1
-interact {
-  eof exit
+fconfigure stdin -blocking 0
+
+proc check_stdin {} {
+  if {[eof stdin]} return
+  set data [read stdin]
+  if {$data ne ""} {
+    send -- $data
+  }
+  after 10 check_stdin
 }
-catch wait result
-exit [lindex $result 3]
+
+check_stdin
+
+expect {
+  eof { exit 0 }
+  timeout { exp_continue }
+}
 `;
       proc = Bun.spawn(['expect', '-c', expectScript], {
         stdin: 'pipe',
