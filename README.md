@@ -9,41 +9,32 @@ npm install -g agy-mux
 ## Quick start
 
 ```bash
-# On your server
-AUTH_TOKEN=secret bun run server/index.js
+# Deploy to GCE (one command)
+agy-mux deploy
 
-# On any device
-agy-mux config
-# → Server: http://your-server:3000
-# → Token: secret
-
+# That's it. Start a session:
 agy-mux start my-feature
-# agy starts in the cloud, terminal pipes through
 
-# Close laptop. Open phone. Or another machine.
+# Close laptop. agy keeps running.
+# Open another machine:
 agy-mux resume <session-id>
-# Pick up exactly where you left off
 ```
 
 `start` spawns agy on the server. `resume` reconnects to a running session. `Ctrl+\` detaches without killing. That's the whole idea.
 
-## Deploy
-
-```bash
-./deploy.sh your-gcp-project
-```
-
-Creates a GCE VM, installs Bun + agy, generates a token, starts the server.
-
 ## CLI
 
 ```bash
-agy-mux start [name]     # Create a new session and connect
-agy-mux resume <id>      # Reconnect to a running session
-agy-mux list             # Show active sessions
-agy-mux stop <id>        # Kill a session
-agy-mux logs <id>        # Show session output log
-agy-mux config           # Set server URL and token
+agy-mux deploy              # Provision GCE VM, install everything, auto-configure
+agy-mux deploy status       # Check server health
+agy-mux deploy teardown     # Delete the VM
+
+agy-mux start [name]        # Create a new session and connect
+agy-mux resume <id>         # Reconnect to a running session
+agy-mux list                # Show active sessions
+agy-mux stop <id>           # Kill a session
+agy-mux logs <id>           # Show session output log
+agy-mux config              # Set server URL and token manually
 ```
 
 - `Ctrl+\` detaches — session keeps running
@@ -52,10 +43,10 @@ agy-mux config           # Set server URL and token
 ## How it works
 
 ```
-  laptop/phone ──WebSocket──→ agy-mux server ──stdin/stdout──→ agy subprocess
-       ↑                            │
-       └────── resume from ─────────┘
-               any device
+  terminal ──WebSocket──→ agy-mux server ──stdin/stdout──→ agy subprocess
+     ↑                          │
+     └───── resume from ────────┘
+             any device
 ```
 
 Server spawns agy as a subprocess, streams I/O over WebSocket to any connected client. History is kept in memory and on disk — reconnecting replays everything.

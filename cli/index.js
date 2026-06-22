@@ -4,6 +4,7 @@
 
 import { loadConfig, saveConfig, hasConfig, configPath } from './config.js';
 import { connectTerminal } from './client.js';
+import { cmdDeploy } from './deploy.js';
 import { createInterface } from 'readline';
 
 const args = process.argv.slice(2);
@@ -30,10 +31,23 @@ async function main() {
     case 'config':
       await cmdConfig();
       break;
+    case 'deploy':
+      await cmdDeploy(arg1, parseFlags(args.slice(2)));
+      break;
     default:
       printUsage();
       break;
   }
+}
+
+function parseFlags(args) {
+  const flags = {};
+  for (let i = 0; i < args.length; i++) {
+    if (args[i].startsWith('--') && args[i + 1]) {
+      flags[args[i].slice(2)] = args[++i];
+    }
+  }
+  return flags;
 }
 
 function printUsage() {
@@ -47,6 +61,9 @@ function printUsage() {
     agy-mux stop <id>        Kill a session
     agy-mux logs <id>        Show session output log
     agy-mux config           Set server URL and token
+    agy-mux deploy           Provision a GCE VM and start server
+    agy-mux deploy status    Check server status
+    agy-mux deploy teardown  Delete the VM
 
   Config: ${configPath()}
 `);
